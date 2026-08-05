@@ -672,6 +672,37 @@
     .audit-user small { display: block; color: var(--muted); font-size: 8px; margin-top: 2px; }
     .profile-email { color: var(--muted); font-size: 10px; padding: 10px 11px; border: 1px solid var(--border); background: #101c30; border-radius: 6px; }
 
+    .team-card-footer {
+      margin-top: 13px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(148,173,208,.10);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 9px;
+    }
+    .team-source {
+      color: var(--muted);
+      font-size: 9px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .team-source i { color: var(--blue-soft); }
+    .contract-origin {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 5px;
+      color: #f3c974;
+      font-size: 9px;
+      font-weight: 700;
+    }
+    .contract-origin i { font-size: 8px; }
+    .status-pendentecadastro { color: #f1bf60; background: rgba(230,173,71,.11); }
+    .legacy-contract-row { background: rgba(230,173,71,.025); }
+    .legacy-contract-row:hover { background: rgba(230,173,71,.055); }
+
     @media (max-width: 900px) {
       .audit-toolbar { grid-template-columns: 1fr 1fr; }
       .audit-toolbar .search-wrap { grid-column: 1 / -1; }
@@ -804,6 +835,7 @@
         <div class="page-heading">
           <div><h1>Contratos</h1><p>Cadastre, edite e acompanhe os contratos vinculados às atividades, medições e documentos.</p></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="secondary-button" id="importLegacyContracts" style="display:none"><i class="fa-solid fa-file-import"></i> Importar existentes <span id="legacyContractCount"></span></button>
             <button class="secondary-button" id="exportContractsCsv"><i class="fa-solid fa-file-csv"></i> Exportar contratos</button>
             <button class="primary-button" data-open-contract-modal><i class="fa-solid fa-file-circle-plus"></i> Novo contrato</button>
           </div>
@@ -827,7 +859,7 @@
           </div>
           <div class="contract-toolbar">
             <div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input id="contractSearch" placeholder="Buscar código, contrato, cliente ou responsável..."></div>
-            <select id="contractStatusFilter"><option value="">Todos os status</option><option>Ativo</option><option>Em pausa</option><option>Concluído</option><option>Cancelado</option></select>
+            <select id="contractStatusFilter"><option value="">Todos os status</option><option>Ativo</option><option>Em pausa</option><option>Concluído</option><option>Cancelado</option><option>Pendente cadastro</option></select>
             <select id="contractSignatureFilter"><option value="">Todas as assinaturas</option><option value="signed">Assinados</option><option value="unsigned">Não assinados</option></select>
             <button class="ghost-button" id="clearContractFilters"><i class="fa-solid fa-filter-circle-xmark"></i> Limpar</button>
           </div>
@@ -857,7 +889,14 @@
       </section>
 
       <section class="view" id="equipe">
-        <div class="page-heading"><div><h1>Equipe</h1><p>Carga de trabalho, produtividade e distribuição por responsável.</p></div><button class="primary-button" data-open-modal><i class="fa-solid fa-plus"></i> Nova Atividade</button></div>
+        <div class="page-heading">
+          <div><h1>Equipe</h1><p>Edite nome, cargo e vínculo dos responsáveis com as atividades.</p></div>
+          <button class="secondary-button" id="refreshTeam"><i class="fa-solid fa-rotate"></i> Atualizar equipe</button>
+        </div>
+        <div class="setup-notice" id="teamSetupNotice">
+          <div><strong>A edição de outros integrantes precisa de uma permissão adicional.</strong><p>Execute o SQL de atualização incluído no pacote para permitir que os usuários autenticados editem os perfis da equipe.</p></div>
+          <button class="secondary-button" id="copyTeamSql"><i class="fa-regular fa-copy"></i> Copiar SQL</button>
+        </div>
         <div class="team-grid" id="teamGrid"></div>
       </section>
 
@@ -948,7 +987,7 @@
           </div>
           <div class="audit-toolbar">
             <div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input id="auditSearch" placeholder="Buscar usuário, registro ou e-mail..."></div>
-            <select id="auditEntityFilter"><option value="">Todos os módulos</option><option value="tarefas">Atividades</option><option value="contratos">Contratos</option><option value="documentos_ld">Documentos / LD</option><option value="medicoes">Medições</option></select>
+            <select id="auditEntityFilter"><option value="">Todos os módulos</option><option value="tarefas">Atividades</option><option value="contratos">Contratos</option><option value="documentos_ld">Documentos / LD</option><option value="medicoes">Medições</option><option value="perfis">Equipe</option></select>
             <select id="auditActionFilter"><option value="">Todas as ações</option><option value="Criou">Criou</option><option value="Editou">Editou</option><option value="Excluiu">Excluiu</option></select>
             <select id="auditUserFilter"><option value="">Todos os usuários</option></select>
             <button class="ghost-button" id="clearAuditFilters"><i class="fa-solid fa-filter-circle-xmark"></i> Limpar</button>
@@ -1088,6 +1127,28 @@
 
 
 
+  <div class="modal-backdrop" id="teamModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="teamModalTitle" style="width:min(560px,100%)">
+      <div class="modal-header">
+        <div><h2 id="teamModalTitle">Editar integrante</h2><p>Atualize o nome e o cargo exibidos no sistema.</p></div>
+        <button class="modal-close" type="button" data-close-team-modal aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="teamForm">
+        <div class="form-body">
+          <input type="hidden" id="teamMemberId">
+          <input type="hidden" id="teamMemberOldName">
+          <input type="hidden" id="teamMemberLegacy">
+          <div class="field"><label>Conta vinculada</label><div class="profile-email" id="teamMemberEmail">—</div></div>
+          <div class="field"><label for="teamMemberName">Nome completo *</label><input id="teamMemberName" required maxlength="120" placeholder="Nome do integrante"></div>
+          <div class="field"><label for="teamMemberRole">Cargo / função</label><input id="teamMemberRole" maxlength="120" placeholder="Ex.: Gestão de Contratos"></div>
+          <div class="field"><label>Sincronização</label><div class="checkbox-grid"><label class="checkbox-card"><input type="checkbox" id="teamSyncTasks" checked><span><i class="fa-solid fa-arrows-rotate"></i> Atualizar este nome nas atividades em que aparece como responsável</span></label></div></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="secondary-button" data-close-team-modal>Cancelar</button><button class="primary-button" type="submit" id="saveTeamButton"><i class="fa-solid fa-floppy-disk"></i> Salvar integrante</button></div>
+      </form>
+    </div>
+  </div>
+
+
   <div class="modal-backdrop" id="profileModal">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle" style="width:min(520px,100%)">
       <div class="modal-header">
@@ -1136,6 +1197,9 @@
       user: null,
       profile: null,
       profileAvailable: true,
+      teamProfiles: [],
+      teamAvailable: true,
+      teamSyncing: false,
       auditLogs: [],
       auditAvailable: true,
       auditSyncing: false,
@@ -1196,6 +1260,116 @@ begin
   end if;
 end $$;
 `;
+
+    const TEAM_SQL = `-- SANEHATEM: permitir edição da equipe e importar contratos antigos
+-- Execute no SQL Editor do Supabase com o usuário postgres.
+
+-- 1. Todos os usuários autenticados podem visualizar e editar os perfis internos.
+alter table public.perfis enable row level security;
+
+drop policy if exists "Usuário atualiza o próprio perfil" on public.perfis;
+drop policy if exists "Usuários autenticados atualizam perfis" on public.perfis;
+
+create policy "Usuários autenticados atualizam perfis"
+on public.perfis
+for update
+to authenticated
+using (true)
+with check (true);
+
+grant select, insert, update on public.perfis to authenticated;
+
+-- 2. Sincronização em tempo real da equipe.
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'perfis'
+  ) then
+    alter publication supabase_realtime add table public.perfis;
+  end if;
+end $$;
+
+-- 3. Registra no histórico quem editou os perfis, caso a auditoria já esteja instalada.
+do $$
+begin
+  if to_regprocedure('public.registrar_historico_alteracao()') is not null then
+    execute 'drop trigger if exists perfis_registrar_historico on public.perfis';
+    execute 'create trigger perfis_registrar_historico after insert or update or delete on public.perfis for each row execute function public.registrar_historico_alteracao()';
+  end if;
+end $$;
+
+-- 4. Recupera nomes de contratos/projetos que já aparecem nas tarefas, LD ou medições.
+do $$
+begin
+  if to_regclass('public.contratos') is null then
+    raise exception 'A tabela public.contratos ainda não existe.';
+  end if;
+
+  if to_regclass('public.tarefas') is not null then
+    execute $sql$
+      insert into public.contratos (codigo, nome, status, assinado, observacoes)
+      select
+        'LEG-' || upper(substr(md5(btrim(projeto)), 1, 8)),
+        btrim(projeto),
+        'Ativo',
+        false,
+        'Importado automaticamente das atividades existentes.'
+      from public.tarefas
+      where nullif(btrim(projeto), '') is not null
+        and not exists (
+          select 1 from public.contratos c
+          where lower(btrim(c.nome)) = lower(btrim(tarefas.projeto))
+        )
+      group by btrim(projeto)
+      on conflict do nothing
+    $sql$;
+  end if;
+
+  if to_regclass('public.documentos_ld') is not null then
+    execute $sql$
+      insert into public.contratos (codigo, nome, status, assinado, observacoes)
+      select
+        'LEG-' || upper(substr(md5(btrim(projeto)), 1, 8)),
+        btrim(projeto),
+        'Ativo',
+        false,
+        'Importado automaticamente da Lista de Documentos.'
+      from public.documentos_ld
+      where nullif(btrim(projeto), '') is not null
+        and not exists (
+          select 1 from public.contratos c
+          where lower(btrim(c.nome)) = lower(btrim(documentos_ld.projeto))
+        )
+      group by btrim(projeto)
+      on conflict do nothing
+    $sql$;
+  end if;
+
+  if to_regclass('public.medicoes') is not null then
+    execute $sql$
+      insert into public.contratos (codigo, nome, status, assinado, observacoes)
+      select
+        'LEG-' || upper(substr(md5(btrim(projeto)), 1, 8)),
+        btrim(projeto),
+        'Ativo',
+        false,
+        'Importado automaticamente das medições existentes.'
+      from public.medicoes
+      where nullif(btrim(projeto), '') is not null
+        and not exists (
+          select 1 from public.contratos c
+          where lower(btrim(c.nome)) = lower(btrim(medicoes.projeto))
+        )
+      group by btrim(projeto)
+      on conflict do nothing
+    $sql$;
+  end if;
+end $$;`;
+
 
     const DOCUMENTS_SQL = `create table if not exists public.documentos_ld (
   id bigint generated by default as identity primary key,
@@ -1358,6 +1532,17 @@ end $$;
 
     function normalize(value = '') {
       return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    }
+
+    function fromTeamProfile(row) {
+      return {
+        id: String(row.id),
+        name: row.nome || row.email?.split('@')[0] || 'Usuário',
+        role: row.cargo || 'Equipe',
+        email: row.email || '',
+        createdAt: row.criado_em || '',
+        updatedAt: row.atualizado_em || ''
+      };
     }
 
     function fromDatabase(row) {
@@ -1597,9 +1782,62 @@ end $$;
       return project ? state.measurements.filter(item => item.project === project) : state.measurements;
     }
 
+    function getLegacyContractNames() {
+      const registered = new Set(state.contracts.map(item => normalize(item.name.trim())));
+      return [...new Set([
+        ...state.tasks.map(item => item.project.trim()),
+        ...state.documents.map(item => item.project.trim()),
+        ...state.measurements.map(item => item.project.trim())
+      ].filter(Boolean))]
+        .filter(name => !registered.has(normalize(name)))
+        .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    }
+
+    function suggestContractCode(name, usedCodes = new Set(state.contracts.map(item => item.code.toUpperCase()))) {
+      let base = normalize(name)
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 36) || 'CONTRATO';
+      let code = base;
+      let index = 2;
+      while (usedCodes.has(code.toUpperCase())) {
+        const suffix = `-${index++}`;
+        code = `${base.slice(0, Math.max(1, 40 - suffix.length))}${suffix}`;
+      }
+      usedCodes.add(code.toUpperCase());
+      return code;
+    }
+
+    function legacyContractItem(name) {
+      return {
+        id: `legacy:${name}`,
+        code: suggestContractCode(name),
+        name,
+        client: '',
+        manager: '',
+        startDate: '',
+        endDate: '',
+        status: 'Pendente cadastro',
+        signed: false,
+        value: '',
+        notes: 'Identificado em atividades, medições ou documentos antigos.',
+        createdAt: '',
+        updatedAt: '',
+        createdByName: '',
+        updatedByName: '',
+        legacy: true
+      };
+    }
+
+    function getDisplayContracts() {
+      return [...state.contracts, ...getLegacyContractNames().map(legacyContractItem)];
+    }
+
     function getScopedContracts() {
       const project = $('globalProject').value;
-      return project ? state.contracts.filter(item => item.name === project) : state.contracts;
+      const contracts = getDisplayContracts();
+      return project ? contracts.filter(item => item.name === project) : contracts;
     }
 
     function toast(message, type = 'success') {
@@ -1744,6 +1982,29 @@ end $$;
     }
 
 
+    async function loadTeamProfiles({ silent = false } = {}) {
+      if (!state.session || state.teamSyncing) return;
+      state.teamSyncing = true;
+      try {
+        const { data, error } = await banco
+          .from('perfis')
+          .select('id,nome,cargo,email,criado_em,atualizado_em')
+          .order('nome', { ascending: true });
+        if (error) throw error;
+        state.teamProfiles = (data || []).map(fromTeamProfile);
+        state.teamAvailable = true;
+        renderTeam();
+      } catch (error) {
+        console.error('Erro ao carregar equipe:', error);
+        state.teamProfiles = [];
+        state.teamAvailable = false;
+        renderTeam();
+        if (!silent) toast('Não foi possível carregar os perfis da equipe.', 'error');
+      } finally {
+        state.teamSyncing = false;
+      }
+    }
+
     async function loadProfile() {
       if (!state.user) return;
       const fallbackName = currentUserName();
@@ -1793,6 +2054,7 @@ end $$;
       state.documents = [];
       state.measurements = [];
       state.contracts = [];
+      state.teamProfiles = [];
       state.auditLogs = [];
       state.profile = null;
     }
@@ -1819,6 +2081,7 @@ end $$;
 
       $('loginMessage').textContent = '';
       await loadProfile();
+      await loadTeamProfiles({ silent: true });
       setupRealtimeSync();
       await loadTasks({ silent: true });
       await loadAuditLogs({ silent: true });
@@ -1863,7 +2126,7 @@ end $$;
     }
 
     function auditEntityLabel(table) {
-      return ({ tarefas: 'Atividade', contratos: 'Contrato', documentos_ld: 'Documento / LD', medicoes: 'Medição' })[table] || table || 'Registro';
+      return ({ tarefas: 'Atividade', contratos: 'Contrato', documentos_ld: 'Documento / LD', medicoes: 'Medição', perfis: 'Equipe' })[table] || table || 'Registro';
     }
 
     function auditActionClass(action) {
@@ -2127,16 +2390,32 @@ end $$;
     }
 
     function renderTeam() {
+      if (!$('teamGrid')) return;
+      $('teamSetupNotice').classList.toggle('show', !state.teamAvailable);
+
       const tasks = getScopedTasks();
-      const owners = getOwners(tasks);
-      $('teamGrid').innerHTML = owners.length ? owners.map(owner => {
-        const ownerTasks = tasks.filter(task => task.owner === owner);
-        const done = ownerTasks.filter(task => task.status === 'Concluída').length;
-        const overdue = ownerTasks.filter(isOverdue).length;
-        const progress = ownerTasks.length ? Math.round(done / ownerTasks.length * 100) : 0;
-        const initials = owner.split(/\s+/).slice(0,2).map(part => part[0]).join('').toUpperCase();
-        return `<article class="panel summary-card"><div class="summary-top"><div style="display:flex;gap:10px;align-items:center"><div class="avatar">${escapeHTML(initials)}</div><div><h3>${escapeHTML(owner)}</h3><small>${ownerTasks.length - done} atividades abertas</small></div></div><div class="summary-number">${progress}%</div></div><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><div class="mini-stats"><div><strong>${ownerTasks.length}</strong><span>Total</span></div><div><strong>${done}</strong><span>Concluídas</span></div><div><strong>${overdue}</strong><span>Atrasadas</span></div></div></article>`;
-      }).join('') : emptyHTML('Nenhum responsável identificado','Cadastre uma atividade informando o responsável.');
+      const profileNames = new Set(state.teamProfiles.map(item => normalize(item.name)));
+      const orphanOwners = getOwners(tasks)
+        .filter(owner => !profileNames.has(normalize(owner)))
+        .map(owner => ({ id: `legacy:${owner}`, name: owner, role: 'Responsável de atividades', email: '', legacy: true }));
+      const members = [...state.teamProfiles, ...orphanOwners];
+
+      $('teamGrid').innerHTML = members.length ? members.map(member => {
+        const memberTasks = tasks.filter(task => normalize(task.owner) === normalize(member.name));
+        const done = memberTasks.filter(task => task.status === 'Concluída').length;
+        const overdue = memberTasks.filter(isOverdue).length;
+        const progress = memberTasks.length ? Math.round(done / memberTasks.length * 100) : 0;
+        const encodedId = encodeURIComponent(member.id);
+        return `<article class="panel summary-card">
+          <div class="summary-top">
+            <div style="display:flex;gap:10px;align-items:center;min-width:0"><div class="avatar">${escapeHTML(initialsFromName(member.name))}</div><div style="min-width:0"><h3 style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(member.name)}</h3><small>${escapeHTML(member.role || 'Equipe')} ${member.email ? `• ${escapeHTML(member.email)}` : ''}</small></div></div>
+            <div class="summary-number">${progress}%</div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
+          <div class="mini-stats"><div><strong>${memberTasks.length}</strong><span>Total</span></div><div><strong>${done}</strong><span>Concluídas</span></div><div><strong>${overdue}</strong><span>Atrasadas</span></div></div>
+          <div class="team-card-footer"><span class="team-source"><i class="fa-solid ${member.legacy ? 'fa-link-slash' : 'fa-user-shield'}"></i>${member.legacy ? 'Sem conta de login vinculada' : 'Perfil do Supabase Auth'}</span><button class="secondary-button" onclick="editTeamMember('${encodedId}')"><i class="fa-solid fa-pen"></i> Editar</button></div>
+        </article>`;
+      }).join('') : emptyHTML('Nenhum integrante identificado','Crie os usuários em Authentication → Users ou atribua responsáveis às atividades.');
     }
 
     function renderTimeline() {
@@ -2198,6 +2477,12 @@ end $$;
       $$('[data-open-contract-modal]').forEach(button => { button.disabled = !state.contractsAvailable; });
 
       const scoped = getScopedContracts();
+      const legacyNames = getLegacyContractNames();
+      const importButton = $('importLegacyContracts');
+      if (importButton) {
+        importButton.style.display = legacyNames.length && state.contractsAvailable ? '' : 'none';
+        $('legacyContractCount').textContent = legacyNames.length ? `(${legacyNames.length})` : '';
+      }
       const today = todayISO();
       $('contractTotal').textContent = scoped.length;
       $('contractActive').textContent = scoped.filter(item => item.status === 'Ativo').length;
@@ -2215,7 +2500,11 @@ end $$;
       }
 
       const contracts = getFilteredContracts();
-      $('contractCount').textContent = `${contracts.length} ${contracts.length === 1 ? 'contrato encontrado' : 'contratos encontrados'}`;
+      const legacyCount = contracts.filter(item => item.legacy).length;
+      const registeredCount = contracts.length - legacyCount;
+      $('contractCount').textContent = legacyCount
+        ? `${registeredCount} cadastrados + ${legacyCount} identificados nos registros`
+        : `${contracts.length} ${contracts.length === 1 ? 'contrato encontrado' : 'contratos encontrados'}`;
       if (!contracts.length) {
         $('contractsTable').innerHTML = emptyHTML('Nenhum contrato encontrado', 'Clique em Novo contrato para cadastrar o primeiro registro.');
         return;
@@ -2223,8 +2512,8 @@ end $$;
 
       $('contractsTable').innerHTML = `<div class="table-scroll"><table style="min-width:1250px"><thead><tr><th>Código / contrato</th><th>Cliente</th><th>Gestor</th><th>Período</th><th>Valor</th><th>Assinatura</th><th>Status</th><th>Progresso</th><th>Última edição</th><th>Ações</th></tr></thead><tbody>${contracts.map(item => {
         const progress = contractProgress(item);
-        return `<tr>
-          <td><div class="task-name">${escapeHTML(item.code)} — ${escapeHTML(item.name)}</div><div class="task-desc">${escapeHTML(item.notes || 'Sem observações')}</div></td>
+        return `<tr class="${item.legacy ? 'legacy-contract-row' : ''}">
+          <td><div class="task-name">${escapeHTML(item.code)} — ${escapeHTML(item.name)}</div><div class="task-desc">${escapeHTML(item.notes || 'Sem observações')}</div>${item.legacy ? '<div class="contract-origin"><i class="fa-solid fa-circle-info"></i> Ainda não cadastrado na tabela contratos</div>' : ''}</td>
           <td>${escapeHTML(item.client || 'Não informado')}</td>
           <td>${escapeHTML(item.manager || 'Não informado')}</td>
           <td><div>${formatDate(item.startDate)}</div><div class="task-desc">até ${formatDate(item.endDate)}</div></td>
@@ -2232,8 +2521,8 @@ end $$;
           <td><span class="badge ${item.signed ? 'status-assinado' : 'status-naoassinado'}">${item.signed ? 'Assinado' : 'Não assinado'}</span></td>
           <td><span class="badge ${contractStatusClass(item.status)}">${escapeHTML(item.status)}</span></td>
           <td style="min-width:130px"><div class="progress-track" style="margin:0 0 6px"><div class="progress-fill" style="width:${progress}%"></div></div><span style="font-size:9px;color:var(--muted)">${progress}% operacional</span></td>
-          <td>${editorHTML(item)}</td>
-          <td><div class="action-row"><button class="action-button" title="Editar contrato" onclick="editContract('${item.id}')"><i class="fa-solid fa-pen"></i></button><button class="action-button" title="Duplicar contrato" onclick="duplicateContract('${item.id}')"><i class="fa-regular fa-clone"></i></button><button class="action-button delete" title="Excluir contrato" onclick="deleteContract('${item.id}')"><i class="fa-solid fa-trash"></i></button></div></td>
+          <td>${item.legacy ? '<div class="editor-cell"><strong>Registro antigo</strong><small>Origem: atividades/LD/medições</small></div>' : editorHTML(item)}</td>
+          <td>${item.legacy ? `<button class="secondary-button" onclick="registerLegacyContract('${encodeURIComponent(item.name)}')"><i class="fa-solid fa-file-circle-plus"></i> Cadastrar</button>` : `<div class="action-row"><button class="action-button" title="Editar contrato" onclick="editContract('${item.id}')"><i class="fa-solid fa-pen"></i></button><button class="action-button" title="Duplicar contrato" onclick="duplicateContract('${item.id}')"><i class="fa-regular fa-clone"></i></button><button class="action-button delete" title="Excluir contrato" onclick="deleteContract('${item.id}')"><i class="fa-solid fa-trash"></i></button></div>`}</td>
         </tr>`;
       }).join('')}</tbody></table></div>`;
     }
@@ -2343,7 +2632,7 @@ end $$;
         ['Responsáveis', getOwners(tasks).length, 'Pessoas com atividades'],
         ['Medições realizadas', measurementsDone, `${measurements.length - measurementsDone} ainda não realizadas`],
         ['Taxa das medições', `${measurements.length ? Math.round(measurementsDone / measurements.length * 100) : 0}%`, `${measurements.length} medições registradas`],
-        ['Contratos ativos', activeContracts, `${contracts.length} contratos cadastrados`],
+        ['Contratos ativos', activeContracts, `${state.contracts.length} cadastrados e ${getLegacyContractNames().length} pendentes de cadastro`],
         ['Contratos sem assinatura', unsignedContracts, 'Registros que precisam de acompanhamento']
       ];
       $('reportsGrid').innerHTML = cards.map(([title,value,subtitle]) => `<article class="panel summary-card"><div class="metric-label">${escapeHTML(title)}</div><div class="metric-value">${escapeHTML(value)}</div><div class="panel-subtitle" style="margin-top:8px">${escapeHTML(subtitle)}</div></article>`).join('');
@@ -2410,6 +2699,45 @@ end $$;
 
 
 
+    function openTeamModal(member) {
+      $('teamForm').reset();
+      $('teamMemberId').value = member.id;
+      $('teamMemberOldName').value = member.name;
+      $('teamMemberLegacy').value = String(Boolean(member.legacy));
+      $('teamMemberEmail').textContent = member.email || 'Sem conta de login vinculada';
+      $('teamMemberName').value = member.name;
+      $('teamMemberRole').value = member.role || 'Equipe';
+      $('teamMemberRole').disabled = Boolean(member.legacy);
+      $('teamModalTitle').textContent = member.legacy ? 'Editar responsável das atividades' : 'Editar integrante da equipe';
+      $('teamModal').classList.add('open');
+      setTimeout(() => $('teamMemberName').focus(), 50);
+    }
+
+    function closeTeamModal() {
+      $('teamModal').classList.remove('open');
+      $('teamMemberRole').disabled = false;
+    }
+
+    function editTeamMember(encodedId) {
+      const id = decodeURIComponent(encodedId);
+      if (id.startsWith('legacy:')) {
+        const name = id.slice(7);
+        return openTeamModal({ id, name, role: 'Responsável de atividades', email: '', legacy: true });
+      }
+      const member = state.teamProfiles.find(item => item.id === id);
+      if (member) openTeamModal(member);
+    }
+
+    async function copyTeamSQL() {
+      try {
+        await navigator.clipboard.writeText(TEAM_SQL);
+        toast('SQL da equipe copiado. Cole no SQL Editor do Supabase.');
+      } catch (error) {
+        console.error(error);
+        toast('Não foi possível copiar o SQL.', 'error');
+      }
+    }
+
     function openContractModal() {
       if (!state.contractsAvailable) return toast('Crie a tabela contratos no Supabase antes de cadastrar.', 'error');
       $('contractForm').reset();
@@ -2419,11 +2747,56 @@ end $$;
       $('contractStatus').value = 'Ativo';
       $('contractSigned').value = 'false';
       $('contractRenameOption').style.display = 'none';
+      const selectedProject = $('globalProject').value;
+      if (selectedProject && !state.contracts.some(item => normalize(item.name) === normalize(selectedProject))) {
+        $('contractName').value = selectedProject;
+        $('contractCode').value = suggestContractCode(selectedProject);
+      }
       $('contractModal').classList.add('open');
       setTimeout(() => $('contractCode').focus(), 50);
     }
 
     function closeContractModal() { $('contractModal').classList.remove('open'); }
+
+    function registerLegacyContract(encodedName) {
+      const name = decodeURIComponent(encodedName);
+      openContractModal();
+      $('contractName').value = name;
+      $('contractCode').value = suggestContractCode(name);
+      $('contractNotes').value = 'Importado dos registros existentes do sistema.';
+      $('contractModalTitle').textContent = 'Cadastrar contrato existente';
+    }
+
+    async function importLegacyContracts() {
+      if (!state.contractsAvailable) return toast('A tabela contratos ainda não está disponível.', 'error');
+      const names = getLegacyContractNames();
+      if (!names.length) return toast('Todos os contratos identificados já estão cadastrados.');
+      if (!confirm(`Cadastrar automaticamente ${names.length} contrato(s) identificado(s) nas atividades, documentos e medições?`)) return;
+
+      const usedCodes = new Set(state.contracts.map(item => item.code.toUpperCase()));
+      const payload = names.map(name => toContractDatabase({
+        code: suggestContractCode(name, usedCodes),
+        name,
+        client: '',
+        manager: '',
+        startDate: '',
+        endDate: '',
+        status: 'Ativo',
+        signed: false,
+        value: '',
+        notes: 'Importado automaticamente dos registros existentes do sistema.'
+      }));
+
+      setLoading(true);
+      const { error } = await banco.from('contratos').insert(payload);
+      setLoading(false);
+      if (error) {
+        console.error(error);
+        return toast('Não foi possível importar todos os contratos existentes.', 'error');
+      }
+      toast(`${names.length} contrato(s) importado(s).`);
+      await loadContracts({ silent: true });
+    }
 
     function editContract(id) {
       const item = state.contracts.find(contract => contract.id === String(id));
@@ -2736,6 +3109,48 @@ end $$;
 
 
 
+    $('teamForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const id = $('teamMemberId').value;
+      const oldName = $('teamMemberOldName').value;
+      const legacy = $('teamMemberLegacy').value === 'true';
+      const name = $('teamMemberName').value.trim();
+      const role = $('teamMemberRole').value.trim() || 'Equipe';
+      const syncTasks = $('teamSyncTasks').checked && oldName && normalize(oldName) !== normalize(name);
+      const button = $('saveTeamButton');
+      const original = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...';
+      setLoading(true);
+      try {
+        if (!legacy) {
+          const { error } = await banco.from('perfis').update({ nome: name, cargo: role, atualizado_em: new Date().toISOString() }).eq('id', id);
+          if (error) throw error;
+          if (id === state.user?.id) {
+            const { error: userError } = await banco.auth.updateUser({ data: { full_name: name, cargo: role } });
+            if (userError) console.warn('Metadados do usuário não atualizados:', userError);
+          }
+        }
+        if (syncTasks) {
+          const { error } = await banco.from('tarefas').update({ responsavel: name }).eq('responsavel', oldName);
+          if (error) throw error;
+        }
+        closeTeamModal();
+        toast(legacy ? 'Responsável atualizado nas atividades.' : 'Integrante da equipe atualizado.');
+        await loadTeamProfiles({ silent: true });
+        await loadTasks({ silent: true });
+        if (id === state.user?.id) await loadProfile();
+      } catch (error) {
+        console.error(error);
+        toast(legacy ? 'Não foi possível atualizar o responsável.' : 'Não foi possível editar este perfil. Execute o SQL de atualização da equipe.', 'error');
+        $('teamSetupNotice').classList.add('show');
+      } finally {
+        setLoading(false);
+        button.disabled = false;
+        button.innerHTML = original;
+      }
+    });
+
     $('profileForm').addEventListener('submit', async event => {
       event.preventDefault();
       if (!state.user) return;
@@ -2958,6 +3373,10 @@ end $$;
       await banco.auth.signOut();
     });
     $('profileButton').addEventListener('click', openProfileModal);
+    $('refreshTeam').addEventListener('click', () => loadTeamProfiles());
+    $('copyTeamSql').addEventListener('click', copyTeamSQL);
+    $$('[data-close-team-modal]').forEach(button => button.addEventListener('click', closeTeamModal));
+    $('teamModal').addEventListener('click', event => { if (event.target === $('teamModal')) closeTeamModal(); });
     $$('[data-close-profile-modal]').forEach(button => button.addEventListener('click', closeProfileModal));
     $('profileModal').addEventListener('click', event => { if (event.target === $('profileModal')) closeProfileModal(); });
     $('refreshAudit').addEventListener('click', () => loadAuditLogs());
@@ -2985,7 +3404,7 @@ end $$;
     $('contractModal').addEventListener('click', event => { if (event.target === $('contractModal')) closeContractModal(); });
     $('documentModal').addEventListener('click', event => { if (event.target === $('documentModal')) closeDocumentModal(); });
     $('measurementModal').addEventListener('click', event => { if (event.target === $('measurementModal')) closeMeasurementModal(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeModal(); closeContractModal(); closeDocumentModal(); closeMeasurementModal(); closeProfileModal(); } });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeModal(); closeContractModal(); closeDocumentModal(); closeMeasurementModal(); closeProfileModal(); closeTeamModal(); } });
 
     $('menuToggle').addEventListener('click', () => {
       if (window.innerWidth <= 860) document.body.classList.toggle('mobile-menu-open');
@@ -3016,6 +3435,7 @@ end $$;
     }));
     $('exportCsv').addEventListener('click', exportCSV);
     $('exportContractsCsv').addEventListener('click', exportContractsCSV);
+    $('importLegacyContracts').addEventListener('click', importLegacyContracts);
     $('refreshContracts').addEventListener('click', () => loadContracts());
     $('clearContractFilters').addEventListener('click', () => { $('contractSearch').value = ''; $('contractStatusFilter').value = ''; $('contractSignatureFilter').value = ''; renderContracts(); });
     ['contractSearch','contractStatusFilter','contractSignatureFilter'].forEach(id => $(id).addEventListener(id === 'contractSearch' ? 'input' : 'change', renderContracts));
@@ -3037,6 +3457,7 @@ end $$;
       clearTimeout(state.realtimeTimer);
       state.realtimeTimer = setTimeout(async () => {
         await loadTasks({ silent: true });
+        await loadTeamProfiles({ silent: true });
         await loadAuditLogs({ silent: true });
       }, 350);
     }
@@ -3055,6 +3476,7 @@ end $$;
         .on('postgres_changes', { event: '*', schema: 'public', table: 'contratos' }, scheduleRealtimeRefresh)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'documentos_ld' }, scheduleRealtimeRefresh)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'medicoes' }, scheduleRealtimeRefresh)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'perfis' }, () => loadTeamProfiles({ silent: true }))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'historico_alteracoes' }, () => loadAuditLogs({ silent: true }))
         .subscribe(status => {
           if (status === 'SUBSCRIBED') setSyncStatus('Tempo real ativo');
@@ -3062,8 +3484,8 @@ end $$;
         });
     }
 
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.session) { loadTasks({ silent: true }); loadAuditLogs({ silent: true }); } });
-    setInterval(() => { if (state.session && document.visibilityState === 'visible' && !$('taskModal').classList.contains('open') && !$('contractModal').classList.contains('open') && !$('documentModal').classList.contains('open') && !$('measurementModal').classList.contains('open') && !$('profileModal').classList.contains('open')) { loadTasks({ silent: true }); loadAuditLogs({ silent: true }); } }, 20000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.session) { loadTasks({ silent: true }); loadTeamProfiles({ silent: true }); loadAuditLogs({ silent: true }); } });
+    setInterval(() => { if (state.session && document.visibilityState === 'visible' && !$('taskModal').classList.contains('open') && !$('contractModal').classList.contains('open') && !$('documentModal').classList.contains('open') && !$('measurementModal').classList.contains('open') && !$('profileModal').classList.contains('open') && !$('teamModal').classList.contains('open')) { loadTasks({ silent: true }); loadTeamProfiles({ silent: true }); loadAuditLogs({ silent: true }); } }, 20000);
 
     loadUIPreferences();
     switchView(state.activeView);
