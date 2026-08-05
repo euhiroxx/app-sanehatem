@@ -587,7 +587,6 @@
       .content { padding-inline: 11px; padding-top: calc(var(--topbar-height) + 17px); }
       .topbar { padding-inline: 9px; gap: 6px; }
       .global-select { width: min(235px, calc(100vw - 132px)); }
-      .top-actions .icon-only:nth-last-child(-n+2) { display: none; }
       .page-heading { align-items: stretch; flex-direction: column; }
       .page-heading .primary-button { width: 100%; }
       .metric-grid { grid-template-columns: 1fr; }
@@ -598,9 +597,121 @@
       .chart-box { height: 245px; }
       .timeline-item { grid-template-columns: 68px 17px minmax(0,1fr); }
     }
+
+
+    /* Autenticação e histórico */
+    body:not(.authenticated) .app-shell { display: none; }
+    body.authenticated .auth-screen { display: none; }
+    .auth-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(47,114,244,.22), transparent 34%),
+        radial-gradient(circle at 85% 80%, rgba(19,189,136,.10), transparent 30%),
+        linear-gradient(145deg, #08111f, #101c31 55%, #0b1424);
+    }
+    .login-shell { width: min(430px, 100%); }
+    .login-brand { margin-bottom: 22px; text-align: center; }
+    .login-brand strong { display: block; font-size: 23px; letter-spacing: .11em; }
+    .login-brand span { display: block; color: var(--muted); font-size: 10px; letter-spacing: .12em; margin-top: 5px; }
+    .login-card {
+      padding: 28px;
+      border: 1px solid rgba(148,173,208,.20);
+      background: rgba(21,34,55,.94);
+      border-radius: 14px;
+      box-shadow: 0 28px 90px rgba(0,0,0,.42);
+      backdrop-filter: blur(12px);
+    }
+    .login-card h1 { font-size: 21px; letter-spacing: -.025em; }
+    .login-card > p { color: var(--muted); font-size: 11px; line-height: 1.6; margin: 7px 0 22px; }
+    .login-fields { display: grid; gap: 14px; }
+    .login-field label { display: block; color: #b8c9e1; font-size: 10px; font-weight: 700; margin-bottom: 7px; }
+    .login-input-wrap { position: relative; }
+    .login-input-wrap > i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted-2); font-size: 12px; }
+    .login-input-wrap input { height: 43px; padding-left: 36px; padding-right: 42px; }
+    .password-toggle { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); }
+    .login-submit { width: 100%; min-height: 43px; margin-top: 4px; }
+    .login-message { min-height: 18px; color: var(--red-soft); font-size: 10px; margin-top: 12px; text-align: center; }
+    .login-help { color: var(--muted-2); font-size: 9px; line-height: 1.55; text-align: center; margin-top: 17px; }
+    .auth-loader { display: none; align-items: center; justify-content: center; gap: 9px; color: var(--muted); font-size: 11px; margin-top: 12px; }
+    body.auth-pending .auth-loader { display: flex; }
+    body.auth-pending #loginForm { opacity: .45; pointer-events: none; }
+
+    .user-menu-actions { margin-left: auto; display: flex; align-items: center; gap: 5px; }
+    .editor-cell { min-width: 130px; }
+    .editor-cell strong { display: block; color: #e6eef9; font-size: 10px; }
+    .editor-cell small { display: block; color: var(--muted); font-size: 8px; margin-top: 3px; }
+
+    .audit-toolbar {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) repeat(3, minmax(130px, .35fr)) auto;
+      gap: 9px;
+    }
+    .audit-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 5px 8px;
+      border-radius: 999px;
+    }
+    .audit-created { color: #64deb8; background: rgba(19,189,136,.12); }
+    .audit-updated { color: #8db9ff; background: rgba(47,114,244,.13); }
+    .audit-deleted { color: #ff9ca3; background: rgba(240,93,103,.13); }
+    .audit-user { display: flex; align-items: center; gap: 9px; min-width: 180px; }
+    .audit-user .avatar { width: 27px; height: 27px; flex-basis: 27px; font-size: 9px; }
+    .audit-user strong { display: block; font-size: 10px; }
+    .audit-user small { display: block; color: var(--muted); font-size: 8px; margin-top: 2px; }
+    .profile-email { color: var(--muted); font-size: 10px; padding: 10px 11px; border: 1px solid var(--border); background: #101c30; border-radius: 6px; }
+
+    @media (max-width: 900px) {
+      .audit-toolbar { grid-template-columns: 1fr 1fr; }
+      .audit-toolbar .search-wrap { grid-column: 1 / -1; }
+    }
+    @media (max-width: 570px) {
+      .login-card { padding: 21px; }
+      .audit-toolbar { grid-template-columns: 1fr; }
+      .audit-toolbar .search-wrap { grid-column: auto; }
+    }
+
   </style>
 </head>
-<body>
+<body class="auth-pending">
+
+  <div class="auth-screen" id="authScreen">
+    <div class="login-shell">
+      <div class="login-brand"><strong>SANEHATEM</strong><span>INTRANET CORPORATIVA</span></div>
+      <div class="login-card">
+        <h1>Acesso ao sistema</h1>
+        <p>Entre com a conta corporativa para acessar os contratos, atividades, medições e documentos.</p>
+        <form id="loginForm">
+          <div class="login-fields">
+            <div class="login-field">
+              <label for="loginEmail">E-mail</label>
+              <div class="login-input-wrap"><i class="fa-regular fa-envelope"></i><input type="email" id="loginEmail" required autocomplete="email" placeholder="nome@empresa.com.br"></div>
+            </div>
+            <div class="login-field">
+              <label for="loginPassword">Senha</label>
+              <div class="login-input-wrap"><i class="fa-solid fa-lock"></i><input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Digite sua senha"><button type="button" class="icon-only password-toggle" id="togglePassword" aria-label="Mostrar senha"><i class="fa-regular fa-eye"></i></button></div>
+            </div>
+            <button class="primary-button login-submit" type="submit" id="loginButton"><i class="fa-solid fa-right-to-bracket"></i> Entrar</button>
+          </div>
+        </form>
+        <div class="auth-loader"><i class="fa-solid fa-circle-notch fa-spin"></i> Verificando sessão...</div>
+        <div class="login-message" id="loginMessage"></div>
+        <div class="login-help">As contas são criadas pelo administrador no Supabase. As alterações ficam vinculadas ao usuário conectado.</div>
+      </div>
+    </div>
+  </div>
+
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
       <div class="brand">
@@ -616,11 +727,12 @@
         <button class="nav-button" data-view="medicoes"><i class="fa-solid fa-ruler-combined"></i><span>Medições</span></button>
         <button class="nav-button" data-view="documentos"><i class="fa-solid fa-folder"></i><span>Documentos</span></button>
         <button class="nav-button" data-view="relatorios"><i class="fa-solid fa-chart-line"></i><span>Relatórios</span></button>
+        <button class="nav-button" data-view="historico"><i class="fa-solid fa-clock-rotate-left"></i><span>Histórico</span></button>
       </nav>
 
       <div class="sidebar-user">
-        <div class="avatar">VA</div>
-        <div class="user-meta"><strong>Vitor Alípio</strong><small><span class="online-dot"></span> Gestão de Contratos</small></div>
+        <div class="avatar" id="currentUserAvatar">--</div>
+        <div class="user-meta"><strong id="currentUserName">Usuário</strong><small><span class="online-dot"></span><span id="currentUserRole">Equipe</span></small></div>
       </div>
     </aside>
 
@@ -632,8 +744,8 @@
       <div class="top-actions">
         <div class="sync-pill" id="syncStatus"><span class="dot"></span><span>Banco online</span></div>
         <button class="icon-only" title="Atualizar dados" id="refreshButton"><i class="fa-solid fa-rotate"></i></button>
-        <button class="icon-only" title="Configurações"><i class="fa-solid fa-gear"></i></button>
-        <button class="icon-only" title="Notificações"><i class="fa-regular fa-bell"></i></button>
+        <button class="icon-only" title="Meu perfil" id="profileButton"><i class="fa-regular fa-user"></i></button>
+        <button class="icon-only" title="Sair do sistema" id="logoutButton"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
       </div>
     </header>
 
@@ -820,6 +932,31 @@
         <div class="page-heading"><div><h1>Relatórios</h1><p>Indicadores consolidados e exportação das atividades.</p></div><button class="secondary-button" id="exportCsv"><i class="fa-solid fa-file-csv"></i> Exportar CSV</button></div>
         <div class="report-grid" id="reportsGrid"></div>
       </section>
+
+
+      <section class="view" id="historico">
+        <div class="page-heading">
+          <div><h1>Histórico de alterações</h1><p>Veja quem criou, editou ou excluiu registros no sistema.</p></div>
+          <button class="secondary-button" id="refreshAudit"><i class="fa-solid fa-rotate"></i> Atualizar histórico</button>
+        </div>
+        <article class="panel">
+          <div class="panel-header">
+            <div><div class="panel-title">Rastreabilidade do sistema</div><div class="panel-subtitle" id="auditCount">0 alterações encontradas</div></div>
+          </div>
+          <div class="setup-notice" id="auditSetupNotice">
+            <div><strong>O histórico ainda não foi configurado no Supabase.</strong><p>Execute o arquivo configurar_login_auditoria.sql para ativar autoria e rastreabilidade.</p></div>
+          </div>
+          <div class="audit-toolbar">
+            <div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input id="auditSearch" placeholder="Buscar usuário, registro ou e-mail..."></div>
+            <select id="auditEntityFilter"><option value="">Todos os módulos</option><option value="tarefas">Atividades</option><option value="contratos">Contratos</option><option value="documentos_ld">Documentos / LD</option><option value="medicoes">Medições</option></select>
+            <select id="auditActionFilter"><option value="">Todas as ações</option><option value="Criou">Criou</option><option value="Editou">Editou</option><option value="Excluiu">Excluiu</option></select>
+            <select id="auditUserFilter"><option value="">Todos os usuários</option></select>
+            <button class="ghost-button" id="clearAuditFilters"><i class="fa-solid fa-filter-circle-xmark"></i> Limpar</button>
+          </div>
+          <div id="auditTable"></div>
+        </article>
+      </section>
+
     </main>
   </div>
 
@@ -949,6 +1086,26 @@
     </div>
   </div>
 
+
+
+  <div class="modal-backdrop" id="profileModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle" style="width:min(520px,100%)">
+      <div class="modal-header">
+        <div><h2 id="profileModalTitle">Meu perfil</h2><p>O nome informado será exibido no histórico das alterações.</p></div>
+        <button class="modal-close" type="button" data-close-profile-modal aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="profileForm">
+        <div class="form-body">
+          <div class="field"><label>E-mail da conta</label><div class="profile-email" id="profileEmail">—</div></div>
+          <div class="field"><label for="profileName">Nome completo *</label><input id="profileName" required maxlength="120" placeholder="Ex.: Vitor Alípio"></div>
+          <div class="field"><label for="profileRole">Cargo / função</label><input id="profileRole" maxlength="120" placeholder="Ex.: Gestão de Contratos"></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="secondary-button" data-close-profile-modal>Cancelar</button><button class="primary-button" type="submit" id="saveProfileButton"><i class="fa-solid fa-floppy-disk"></i> Salvar perfil</button></div>
+      </form>
+    </div>
+  </div>
+
+
   <div class="toast-stack" id="toastStack"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -975,6 +1132,13 @@
       contracts: [],
       contractsAvailable: true,
       contractSyncing: false,
+      session: null,
+      user: null,
+      profile: null,
+      profileAvailable: true,
+      auditLogs: [],
+      auditAvailable: true,
+      auditSyncing: false,
       realtimeChannel: null,
       realtimeTimer: null
     };
@@ -1166,6 +1330,28 @@ end $$;
       return new Date(value + 'T12:00:00').toLocaleDateString('pt-BR');
     }
 
+    function formatDateTime(value) {
+      if (!value) return 'Data não registrada';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return 'Data não registrada';
+      return date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    function initialsFromName(value = '') {
+      const parts = String(value).trim().split(/\s+/).filter(Boolean);
+      return (parts.slice(0, 2).map(part => part[0]).join('') || '--').toUpperCase();
+    }
+
+    function currentUserName() {
+      return state.profile?.name || state.user?.user_metadata?.full_name || state.user?.user_metadata?.name || state.user?.email?.split('@')[0] || 'Usuário';
+    }
+
+    function editorHTML(item) {
+      const name = item.updatedByName || item.createdByName || 'Sem autoria registrada';
+      const date = item.updatedAt || item.createdAt;
+      return `<div class="editor-cell"><strong>${escapeHTML(name)}</strong><small>${escapeHTML(formatDateTime(date))}</small></div>`;
+    }
+
     function escapeHTML(value = '') {
       return String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
     }
@@ -1185,7 +1371,10 @@ end $$;
         status: row.status || 'Pendente',
         startDate: row.data_inicial || '',
         dueDate: row.data_limite || '',
-        createdAt: row.criado_em || ''
+        createdAt: row.criado_em || '',
+        updatedAt: row.atualizado_em || '',
+        createdByName: row.criado_por_nome || '',
+        updatedByName: row.atualizado_por_nome || ''
       };
     }
 
@@ -1220,7 +1409,10 @@ end $$;
         networkPath: row.caminho_rede || '',
         cloudPath: row.caminho_nuvem || '',
         notes: row.observacoes || '',
-        createdAt: row.criado_em || ''
+        createdAt: row.criado_em || '',
+        updatedAt: row.atualizado_em || '',
+        createdByName: row.criado_por_nome || '',
+        updatedByName: row.atualizado_por_nome || ''
       };
     }
 
@@ -1260,7 +1452,9 @@ end $$;
         value: row.valor === null || row.valor === undefined ? '' : Number(row.valor),
         notes: row.observacoes || '',
         createdAt: row.criado_em || '',
-        updatedAt: row.atualizado_em || ''
+        updatedAt: row.atualizado_em || '',
+        createdByName: row.criado_por_nome || '',
+        updatedByName: row.atualizado_por_nome || ''
       };
     }
 
@@ -1298,7 +1492,9 @@ end $$;
         date: row.data_medicao || '',
         notes: row.observacoes || '',
         createdAt: row.criado_em || '',
-        updatedAt: row.atualizado_em || ''
+        updatedAt: row.atualizado_em || '',
+        createdByName: row.criado_por_nome || '',
+        updatedByName: row.atualizado_por_nome || ''
       };
     }
 
@@ -1427,6 +1623,7 @@ end $$;
     }
 
     async function loadTasks({ silent = false } = {}) {
+      if (!state.session) return;
       if (state.syncing) return;
       state.syncing = true;
       setLoading(true);
@@ -1434,7 +1631,7 @@ end $$;
       try {
         const { data, error } = await banco
           .from('tarefas')
-          .select('id,titulo,descricao,projeto,responsavel,prioridade,status,data_inicial,data_limite,criado_em')
+          .select('*')
           .order('criado_em', { ascending: false });
         if (error) throw error;
         state.tasks = (data || []).map(fromDatabase);
@@ -1460,12 +1657,13 @@ end $$;
     }
 
     async function loadDocuments({ silent = false } = {}) {
+      if (!state.session) return;
       if (state.documentSyncing) return;
       state.documentSyncing = true;
       try {
         const { data, error } = await banco
           .from('documentos_ld')
-          .select('id,ordem,projeto,pacote,documento,revisao,data_ra,data_rb,data_aprovacao,status,possui_pdf,possui_editavel,caminho_rede,caminho_nuvem,observacoes,criado_em')
+          .select('*')
           .order('ordem', { ascending: true })
           .order('criado_em', { ascending: true });
         if (error) throw error;
@@ -1488,12 +1686,13 @@ end $$;
 
 
     async function loadMeasurements({ silent = false } = {}) {
+      if (!state.session) return;
       if (state.measurementSyncing) return;
       state.measurementSyncing = true;
       try {
         const { data, error } = await banco
           .from('medicoes')
-          .select('id,projeto,referencia,realizada,data_medicao,observacoes,criado_em,atualizado_em')
+          .select('*')
           .order('criado_em', { ascending: false });
         if (error) throw error;
         state.measurements = (data || []).map(fromMeasurementDatabase);
@@ -1516,12 +1715,13 @@ end $$;
 
 
     async function loadContracts({ silent = false } = {}) {
+      if (!state.session) return;
       if (state.contractSyncing) return;
       state.contractSyncing = true;
       try {
         const { data, error } = await banco
           .from('contratos')
-          .select('id,codigo,nome,cliente,responsavel,data_inicio,data_fim,status,assinado,valor,observacoes,criado_em,atualizado_em')
+          .select('*')
           .order('criado_em', { ascending: false });
         if (error) throw error;
         state.contracts = (data || []).map(fromContractDatabase);
@@ -1542,6 +1742,185 @@ end $$;
         state.contractSyncing = false;
       }
     }
+
+
+    async function loadProfile() {
+      if (!state.user) return;
+      const fallbackName = currentUserName();
+      try {
+        const { data, error } = await banco
+          .from('perfis')
+          .select('id,nome,cargo,email')
+          .eq('id', state.user.id)
+          .maybeSingle();
+        if (error) throw error;
+        state.profileAvailable = true;
+        state.profile = data ? {
+          id: data.id,
+          name: data.nome || fallbackName,
+          role: data.cargo || 'Equipe',
+          email: data.email || state.user.email || ''
+        } : {
+          id: state.user.id,
+          name: fallbackName,
+          role: 'Equipe',
+          email: state.user.email || ''
+        };
+      } catch (error) {
+        console.error('Erro ao carregar perfil:', error);
+        state.profileAvailable = false;
+        state.profile = {
+          id: state.user.id,
+          name: fallbackName,
+          role: 'Equipe',
+          email: state.user.email || ''
+        };
+      }
+      updateCurrentUserUI();
+    }
+
+    function updateCurrentUserUI() {
+      const name = currentUserName();
+      const role = state.profile?.role || 'Equipe';
+      $('currentUserName').textContent = name;
+      $('currentUserRole').textContent = role;
+      $('currentUserAvatar').textContent = initialsFromName(name);
+      $('profileEmail').textContent = state.user?.email || '—';
+    }
+
+    function clearApplicationData() {
+      state.tasks = [];
+      state.documents = [];
+      state.measurements = [];
+      state.contracts = [];
+      state.auditLogs = [];
+      state.profile = null;
+    }
+
+    async function applySession(session) {
+      state.session = session || null;
+      state.user = session?.user || null;
+      document.body.classList.remove('auth-pending');
+      document.body.classList.toggle('authenticated', Boolean(session));
+
+      const loginButton = $('loginButton');
+      loginButton.disabled = false;
+      loginButton.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar';
+
+      if (!session) {
+        clearApplicationData();
+        await teardownRealtimeSync();
+        $('loginPassword').value = '';
+        $('currentUserAvatar').textContent = '--';
+        $('currentUserName').textContent = 'Usuário';
+        $('currentUserRole').textContent = 'Equipe';
+        return;
+      }
+
+      $('loginMessage').textContent = '';
+      await loadProfile();
+      setupRealtimeSync();
+      await loadTasks({ silent: true });
+      await loadAuditLogs({ silent: true });
+    }
+
+    async function initializeAuth() {
+      document.body.classList.add('auth-pending');
+      const { data, error } = await banco.auth.getSession();
+      if (error) {
+        console.error(error);
+        $('loginMessage').textContent = 'Não foi possível verificar a sessão.';
+      }
+      await applySession(data?.session || null);
+
+      banco.auth.onAuthStateChange((event, session) => {
+        setTimeout(() => applySession(session), 0);
+      });
+    }
+
+    async function loadAuditLogs({ silent = false } = {}) {
+      if (!state.session || state.auditSyncing) return;
+      state.auditSyncing = true;
+      try {
+        const { data, error } = await banco
+          .from('historico_alteracoes')
+          .select('id,usuario_id,usuario_nome,usuario_email,tabela,registro_id,acao,titulo,criado_em')
+          .order('criado_em', { ascending: false })
+          .limit(400);
+        if (error) throw error;
+        state.auditLogs = data || [];
+        state.auditAvailable = true;
+        renderAuditLogs();
+      } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+        state.auditAvailable = false;
+        state.auditLogs = [];
+        renderAuditLogs();
+        if (!silent && !normalize(error?.message || '').includes('does not exist')) toast('Não foi possível carregar o histórico.', 'error');
+      } finally {
+        state.auditSyncing = false;
+      }
+    }
+
+    function auditEntityLabel(table) {
+      return ({ tarefas: 'Atividade', contratos: 'Contrato', documentos_ld: 'Documento / LD', medicoes: 'Medição' })[table] || table || 'Registro';
+    }
+
+    function auditActionClass(action) {
+      return action === 'Criou' ? 'audit-created' : action === 'Excluiu' ? 'audit-deleted' : 'audit-updated';
+    }
+
+    function getFilteredAuditLogs() {
+      const term = normalize($('auditSearch')?.value || '');
+      const entity = $('auditEntityFilter')?.value || '';
+      const action = $('auditActionFilter')?.value || '';
+      const user = $('auditUserFilter')?.value || '';
+      return state.auditLogs.filter(item => {
+        const haystack = normalize([item.usuario_nome, item.usuario_email, item.titulo, item.tabela, item.acao].join(' '));
+        return (!term || haystack.includes(term)) && (!entity || item.tabela === entity) && (!action || item.acao === action) && (!user || item.usuario_nome === user);
+      });
+    }
+
+    function renderAuditLogs() {
+      if (!$('auditTable')) return;
+      $('auditSetupNotice').classList.toggle('show', !state.auditAvailable);
+      const currentUser = $('auditUserFilter').value;
+      const users = [...new Set(state.auditLogs.map(item => item.usuario_nome).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'pt-BR'));
+      $('auditUserFilter').innerHTML = '<option value="">Todos os usuários</option>' + users.map(user => `<option value="${escapeHTML(user)}">${escapeHTML(user)}</option>`).join('');
+      if (users.includes(currentUser)) $('auditUserFilter').value = currentUser;
+
+      if (!state.auditAvailable) {
+        $('auditCount').textContent = 'Configuração necessária';
+        $('auditTable').innerHTML = emptyHTML('Histórico aguardando configuração', 'Execute configurar_login_auditoria.sql no Supabase.');
+        return;
+      }
+
+      const items = getFilteredAuditLogs();
+      $('auditCount').textContent = `${items.length} ${items.length === 1 ? 'alteração encontrada' : 'alterações encontradas'}`;
+      if (!items.length) {
+        $('auditTable').innerHTML = emptyHTML('Nenhuma alteração encontrada', 'As próximas edições realizadas por usuários conectados aparecerão aqui.');
+        return;
+      }
+
+      $('auditTable').innerHTML = `<div class="table-scroll"><table style="min-width:950px"><thead><tr><th>Usuário</th><th>Ação</th><th>Módulo</th><th>Registro</th><th>Data e hora</th></tr></thead><tbody>${items.map(item => `<tr>
+        <td><div class="audit-user"><div class="avatar">${escapeHTML(initialsFromName(item.usuario_nome))}</div><div><strong>${escapeHTML(item.usuario_nome || 'Usuário')}</strong><small>${escapeHTML(item.usuario_email || 'E-mail não registrado')}</small></div></div></td>
+        <td><span class="audit-action ${auditActionClass(item.acao)}">${escapeHTML(item.acao)}</span></td>
+        <td>${escapeHTML(auditEntityLabel(item.tabela))}</td>
+        <td><div class="task-name">${escapeHTML(item.titulo || `Registro #${item.registro_id || ''}`)}</div><div class="task-desc">ID ${escapeHTML(item.registro_id || '—')}</div></td>
+        <td>${escapeHTML(formatDateTime(item.criado_em))}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+    }
+
+    function openProfileModal() {
+      if (!state.user) return;
+      $('profileName').value = currentUserName();
+      $('profileRole').value = state.profile?.role || 'Equipe';
+      $('profileEmail').textContent = state.user.email || '—';
+      $('profileModal').classList.add('open');
+      setTimeout(() => $('profileName').focus(), 50);
+    }
+
+    function closeProfileModal() { $('profileModal').classList.remove('open'); }
 
     function updateGlobalFilters() {
       const currentProject = $('globalProject').value;
@@ -1662,7 +2041,7 @@ end $$;
 
     function taskTableHTML(tasks, compact = false) {
       if (!tasks.length) return emptyHTML();
-      return `<div class="table-scroll"><table><thead><tr><th>Atividade</th><th>Contrato / Projeto</th><th>Responsável</th><th>Prazo</th><th>Prioridade</th><th>Status</th>${compact ? '' : '<th>Ações</th>'}</tr></thead><tbody>${tasks.map(task => {
+      return `<div class="table-scroll"><table><thead><tr><th>Atividade</th><th>Contrato / Projeto</th><th>Responsável</th><th>Prazo</th><th>Prioridade</th><th>Status</th>${compact ? '' : '<th>Última edição</th><th>Ações</th>'}</tr></thead><tbody>${tasks.map(task => {
         const status = shownStatus(task);
         return `<tr>
           <td><div class="task-name">${escapeHTML(task.title)}</div><div class="task-desc">${escapeHTML(task.description || 'Sem descrição')}</div></td>
@@ -1671,7 +2050,7 @@ end $$;
           <td>${formatDate(task.dueDate)}</td>
           <td><span class="priority ${priorityClass(task.priority)}">${escapeHTML(task.priority)}</span></td>
           <td><span class="badge ${statusClass(status)}">${escapeHTML(status)}</span></td>
-          ${compact ? '' : `<td><div class="action-row"><button class="action-button" title="Editar" onclick="editTask('${task.id}')"><i class="fa-solid fa-pen"></i></button><button class="action-button" title="Avançar status" onclick="advanceStatus('${task.id}')"><i class="fa-solid fa-forward-step"></i></button><button class="action-button" title="Duplicar" onclick="duplicateTask('${task.id}')"><i class="fa-regular fa-clone"></i></button><button class="action-button delete" title="Excluir" onclick="deleteTask('${task.id}')"><i class="fa-solid fa-trash"></i></button></div></td>`}
+          ${compact ? '' : `<td>${editorHTML(task)}</td><td><div class="action-row"><button class="action-button" title="Editar" onclick="editTask('${task.id}')"><i class="fa-solid fa-pen"></i></button><button class="action-button" title="Avançar status" onclick="advanceStatus('${task.id}')"><i class="fa-solid fa-forward-step"></i></button><button class="action-button" title="Duplicar" onclick="duplicateTask('${task.id}')"><i class="fa-regular fa-clone"></i></button><button class="action-button delete" title="Excluir" onclick="deleteTask('${task.id}')"><i class="fa-solid fa-trash"></i></button></div></td>`}
         </tr>`;
       }).join('')}</tbody></table></div>`;
     }
@@ -1842,7 +2221,7 @@ end $$;
         return;
       }
 
-      $('contractsTable').innerHTML = `<div class="table-scroll"><table style="min-width:1250px"><thead><tr><th>Código / contrato</th><th>Cliente</th><th>Gestor</th><th>Período</th><th>Valor</th><th>Assinatura</th><th>Status</th><th>Progresso</th><th>Ações</th></tr></thead><tbody>${contracts.map(item => {
+      $('contractsTable').innerHTML = `<div class="table-scroll"><table style="min-width:1250px"><thead><tr><th>Código / contrato</th><th>Cliente</th><th>Gestor</th><th>Período</th><th>Valor</th><th>Assinatura</th><th>Status</th><th>Progresso</th><th>Última edição</th><th>Ações</th></tr></thead><tbody>${contracts.map(item => {
         const progress = contractProgress(item);
         return `<tr>
           <td><div class="task-name">${escapeHTML(item.code)} — ${escapeHTML(item.name)}</div><div class="task-desc">${escapeHTML(item.notes || 'Sem observações')}</div></td>
@@ -1853,6 +2232,7 @@ end $$;
           <td><span class="badge ${item.signed ? 'status-assinado' : 'status-naoassinado'}">${item.signed ? 'Assinado' : 'Não assinado'}</span></td>
           <td><span class="badge ${contractStatusClass(item.status)}">${escapeHTML(item.status)}</span></td>
           <td style="min-width:130px"><div class="progress-track" style="margin:0 0 6px"><div class="progress-fill" style="width:${progress}%"></div></div><span style="font-size:9px;color:var(--muted)">${progress}% operacional</span></td>
+          <td>${editorHTML(item)}</td>
           <td><div class="action-row"><button class="action-button" title="Editar contrato" onclick="editContract('${item.id}')"><i class="fa-solid fa-pen"></i></button><button class="action-button" title="Duplicar contrato" onclick="duplicateContract('${item.id}')"><i class="fa-regular fa-clone"></i></button><button class="action-button delete" title="Excluir contrato" onclick="deleteContract('${item.id}')"><i class="fa-solid fa-trash"></i></button></div></td>
         </tr>`;
       }).join('')}</tbody></table></div>`;
@@ -1896,9 +2276,9 @@ end $$;
         $('measurementTable').innerHTML = emptyHTML('Nenhuma medição encontrada','Adicione uma medição e informe se ela foi realizada ou não.');
         return;
       }
-      $('measurementTable').innerHTML = `<div class="table-scroll"><table><thead><tr><th>Medição</th><th>Projeto</th><th>Data</th><th>Situação</th><th>Observações</th><th>Ações</th></tr></thead><tbody>${measurements.map(item => {
+      $('measurementTable').innerHTML = `<div class="table-scroll"><table><thead><tr><th>Medição</th><th>Projeto</th><th>Data</th><th>Situação</th><th>Observações</th><th>Última edição</th><th>Ações</th></tr></thead><tbody>${measurements.map(item => {
         const status = item.performed ? 'Realizada' : 'Não realizada';
-        return `<tr><td><div class="task-name">${escapeHTML(item.reference)}</div></td><td><span class="project-chip"><span class="project-dot"></span>${escapeHTML(item.project)}</span></td><td>${formatDate(item.date)}</td><td><span class="badge ${statusClass(status)}">${status}</span></td><td><div class="task-desc">${escapeHTML(item.notes || 'Sem observações')}</div></td><td><div class="action-row"><button class="action-button" title="Editar" onclick="editMeasurement('${item.id}')"><i class="fa-solid fa-pen"></i></button><button class="action-button" title="Alternar realizada/não realizada" onclick="toggleMeasurement('${item.id}')"><i class="fa-solid fa-check-double"></i></button><button class="action-button delete" title="Excluir" onclick="deleteMeasurement('${item.id}')"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
+        return `<tr><td><div class="task-name">${escapeHTML(item.reference)}</div></td><td><span class="project-chip"><span class="project-dot"></span>${escapeHTML(item.project)}</span></td><td>${formatDate(item.date)}</td><td><span class="badge ${statusClass(status)}">${status}</span></td><td><div class="task-desc">${escapeHTML(item.notes || 'Sem observações')}</div></td><td>${editorHTML(item)}</td><td><div class="action-row"><button class="action-button" title="Editar" onclick="editMeasurement('${item.id}')"><i class="fa-solid fa-pen"></i></button><button class="action-button" title="Alternar realizada/não realizada" onclick="toggleMeasurement('${item.id}')"><i class="fa-solid fa-check-double"></i></button><button class="action-button delete" title="Excluir" onclick="deleteMeasurement('${item.id}')"><i class="fa-solid fa-trash"></i></button></div></td></tr>`;
       }).join('')}</tbody></table></div>`;
     }
 
@@ -1928,7 +2308,7 @@ end $$;
         return;
       }
 
-      $('documentsTable').innerHTML = `<div class="table-scroll"><table style="min-width:1200px"><thead><tr><th>Ordem</th><th>Documento / Pacote</th><th>Projeto</th><th>Revisão</th><th>RA</th><th>RB</th><th>Aprovação</th><th>Arquivos</th><th>Status</th><th>Ações</th></tr></thead><tbody>${documents.map(item => `<tr>
+      $('documentsTable').innerHTML = `<div class="table-scroll"><table style="min-width:1200px"><thead><tr><th>Ordem</th><th>Documento / Pacote</th><th>Projeto</th><th>Revisão</th><th>RA</th><th>RB</th><th>Aprovação</th><th>Arquivos</th><th>Status</th><th>Última edição</th><th>Ações</th></tr></thead><tbody>${documents.map(item => `<tr>
         <td><strong>${item.order}</strong></td>
         <td><div class="task-name">${escapeHTML(item.name)}</div><div class="task-desc">${escapeHTML(item.package || 'Sem pacote/disciplina')}</div></td>
         <td><span class="project-chip"><span class="project-dot"></span>${escapeHTML(item.project)}</span></td>
@@ -1938,6 +2318,7 @@ end $$;
         <td class="document-date">${formatDate(item.approvalDate)}</td>
         <td><div class="file-flags"><span class="file-flag ${item.hasPdf ? 'ok' : ''}"><i class="fa-regular fa-file-pdf"></i> PDF</span><span class="file-flag ${item.hasEditable ? 'ok' : ''}"><i class="fa-regular fa-file-code"></i> Editável</span></div></td>
         <td><span class="badge ${documentStatusClass(item.status)}">${escapeHTML(item.status)}</span></td>
+        <td>${editorHTML(item)}</td>
         <td><div class="action-row"><button class="action-button" title="Editar" onclick="editDocument('${item.id}')"><i class="fa-solid fa-pen"></i></button><button class="action-button" title="Duplicar" onclick="duplicateDocument('${item.id}')"><i class="fa-regular fa-clone"></i></button><button class="action-button delete" title="Excluir" onclick="deleteDocument('${item.id}')"><i class="fa-solid fa-trash"></i></button></div></td>
       </tr>`).join('')}</tbody></table></div>`;
     }
@@ -1982,6 +2363,7 @@ end $$;
       renderDashboardMeasurements();
       renderDocuments();
       renderReports();
+      renderAuditLogs();
     }
 
     function switchView(viewId) {
@@ -2353,6 +2735,40 @@ end $$;
 
 
 
+
+    $('profileForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!state.user) return;
+      const name = $('profileName').value.trim();
+      const role = $('profileRole').value.trim() || 'Equipe';
+      const button = $('saveProfileButton');
+      const original = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...';
+      try {
+        const { error: profileError } = await banco.from('perfis').upsert({
+          id: state.user.id,
+          nome: name,
+          cargo: role,
+          email: state.user.email || null,
+          atualizado_em: new Date().toISOString()
+        }, { onConflict: 'id' });
+        if (profileError) throw profileError;
+        const { error: userError } = await banco.auth.updateUser({ data: { full_name: name, cargo: role } });
+        if (userError) console.warn('Não foi possível atualizar os metadados do usuário:', userError);
+        state.profile = { id: state.user.id, name, role, email: state.user.email || '' };
+        updateCurrentUserUI();
+        closeProfileModal();
+        toast('Perfil atualizado. As próximas edições usarão este nome.');
+      } catch (error) {
+        console.error(error);
+        toast('Não foi possível salvar o perfil. Execute o SQL de login e auditoria.', 'error');
+      } finally {
+        button.disabled = false;
+        button.innerHTML = original;
+      }
+    });
+
     $('contractForm').addEventListener('submit', async event => {
       event.preventDefault();
       if ($('contractEndDate').value && $('contractStartDate').value && $('contractEndDate').value < $('contractStartDate').value) return toast('A data final não pode ser anterior à data inicial.', 'error');
@@ -2510,6 +2926,50 @@ end $$;
       }
     });
 
+
+    $('loginForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const button = $('loginButton');
+      const original = button.innerHTML;
+      $('loginMessage').textContent = '';
+      button.disabled = true;
+      button.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Entrando...';
+      const { error } = await banco.auth.signInWithPassword({
+        email: $('loginEmail').value.trim(),
+        password: $('loginPassword').value
+      });
+      if (error) {
+        console.error(error);
+        $('loginMessage').textContent = 'E-mail ou senha inválidos.';
+        button.disabled = false;
+        button.innerHTML = original;
+      }
+    });
+
+    $('togglePassword').addEventListener('click', () => {
+      const input = $('loginPassword');
+      const visible = input.type === 'text';
+      input.type = visible ? 'password' : 'text';
+      $('togglePassword').innerHTML = `<i class="fa-regular ${visible ? 'fa-eye' : 'fa-eye-slash'}"></i>`;
+    });
+
+    $('logoutButton').addEventListener('click', async () => {
+      if (!confirm('Deseja sair do sistema?')) return;
+      await banco.auth.signOut();
+    });
+    $('profileButton').addEventListener('click', openProfileModal);
+    $$('[data-close-profile-modal]').forEach(button => button.addEventListener('click', closeProfileModal));
+    $('profileModal').addEventListener('click', event => { if (event.target === $('profileModal')) closeProfileModal(); });
+    $('refreshAudit').addEventListener('click', () => loadAuditLogs());
+    $('clearAuditFilters').addEventListener('click', () => {
+      $('auditSearch').value = '';
+      $('auditEntityFilter').value = '';
+      $('auditActionFilter').value = '';
+      $('auditUserFilter').value = '';
+      renderAuditLogs();
+    });
+    ['auditSearch','auditEntityFilter','auditActionFilter','auditUserFilter'].forEach(id => $(id).addEventListener(id === 'auditSearch' ? 'input' : 'change', renderAuditLogs));
+
     $$('.nav-button').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
     $$('[data-go-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.goView)));
     $$('[data-open-modal]').forEach(button => button.addEventListener('click', openModal));
@@ -2525,7 +2985,7 @@ end $$;
     $('contractModal').addEventListener('click', event => { if (event.target === $('contractModal')) closeContractModal(); });
     $('documentModal').addEventListener('click', event => { if (event.target === $('documentModal')) closeDocumentModal(); });
     $('measurementModal').addEventListener('click', event => { if (event.target === $('measurementModal')) closeMeasurementModal(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeModal(); closeContractModal(); closeDocumentModal(); closeMeasurementModal(); } });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeModal(); closeContractModal(); closeDocumentModal(); closeMeasurementModal(); closeProfileModal(); } });
 
     $('menuToggle').addEventListener('click', () => {
       if (window.innerWidth <= 860) document.body.classList.toggle('mobile-menu-open');
@@ -2575,25 +3035,35 @@ end $$;
 
     function scheduleRealtimeRefresh() {
       clearTimeout(state.realtimeTimer);
-      state.realtimeTimer = setTimeout(() => loadTasks({ silent: true }), 350);
+      state.realtimeTimer = setTimeout(async () => {
+        await loadTasks({ silent: true });
+        await loadAuditLogs({ silent: true });
+      }, 350);
+    }
+
+    async function teardownRealtimeSync() {
+      if (!state.realtimeChannel) return;
+      await banco.removeChannel(state.realtimeChannel);
+      state.realtimeChannel = null;
     }
 
     function setupRealtimeSync() {
-      if (state.realtimeChannel) return;
+      if (!state.session || state.realtimeChannel) return;
       state.realtimeChannel = banco
         .channel('sanehatem-operacional')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas' }, scheduleRealtimeRefresh)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'contratos' }, scheduleRealtimeRefresh)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'documentos_ld' }, scheduleRealtimeRefresh)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'medicoes' }, scheduleRealtimeRefresh)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'historico_alteracoes' }, () => loadAuditLogs({ silent: true }))
         .subscribe(status => {
           if (status === 'SUBSCRIBED') setSyncStatus('Tempo real ativo');
           if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setSyncStatus('Sincronização periódica', true);
         });
     }
 
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') loadTasks({ silent: true }); });
-    setInterval(() => { if (document.visibilityState === 'visible' && !$('taskModal').classList.contains('open') && !$('contractModal').classList.contains('open') && !$('documentModal').classList.contains('open') && !$('measurementModal').classList.contains('open')) loadTasks({ silent: true }); }, 20000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.session) { loadTasks({ silent: true }); loadAuditLogs({ silent: true }); } });
+    setInterval(() => { if (state.session && document.visibilityState === 'visible' && !$('taskModal').classList.contains('open') && !$('contractModal').classList.contains('open') && !$('documentModal').classList.contains('open') && !$('measurementModal').classList.contains('open') && !$('profileModal').classList.contains('open')) { loadTasks({ silent: true }); loadAuditLogs({ silent: true }); } }, 20000);
 
     loadUIPreferences();
     switchView(state.activeView);
@@ -2604,8 +3074,7 @@ end $$;
       item.classList.toggle('ghost-button', !active);
     });
     if ($('sortActivities')) $('sortActivities').value = 'due-asc';
-    setupRealtimeSync();
-    loadTasks();
+    initializeAuth();
   </script>
 </body>
 </html>
