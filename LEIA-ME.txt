@@ -1,0 +1,23 @@
+SANEHATEM — SISTEMA ATUALIZADO
+
+1. Abra o Supabase > SQL Editor.
+2. Execute o arquivo criar_tabela_medicoes.sql.
+3. Caso ainda não tenha criado a LD, execute também criar_tabela_documentos_ld.sql.
+4. Substitua o index.html do repositório no GitHub pelo novo arquivo.
+5. Aguarde o GitHub Pages publicar a atualização.
+
+MÓDULO DE MEDIÇÕES
+- Adicionar uma medição.
+- Informar projeto/lote e referência.
+- Marcar como Realizada ou Não realizada.
+- Editar, alterar a situação e excluir.
+- Exportar medições em CSV.
+- Indicadores sincronizados com o dashboard.
+
+SINCRONIZAÇÃO
+- Supabase Realtime para mudanças instantâneas quando habilitado pelo SQL.
+- Atualização automática a cada 20 segundos como contingência.
+
+TECNOLOGIA
+O sistema permanece em HTML, CSS e JavaScript puro para funcionar diretamente no GitHub Pages.
+React via CDN não foi incluído, porque aumentaria o carregamento e duplicaria a estrutura existente sem trazer vantagem real para este sistema de arquivo único.
